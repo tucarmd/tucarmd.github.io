@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>CarMD Connect – Promo Code</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body { margin: 0; font-family: 'Poppins', sans-serif; background: #EFF5FF; color: #333; }
+        .wrapper { display: flex; min-height: 100vh; justify-content: center; align-items: center; }
+        .container { width: 100%; max-width: 420px; padding: 2rem 1.5rem; text-align: center; box-sizing: border-box; }
+        .title { margin: 0 0 1rem; font-size: 1rem; font-weight: 600; }
+        .code { display: inline-block; margin: 0 0 1.5rem; padding: 0.75rem 1.5rem; background: #fff; border: 2px dashed #4A9BE0;
+                border-radius: 0.75rem; font-size: 1.75rem; font-weight: 600; letter-spacing: 0.3rem; color: #1E5F99; }
+        .text { margin: 0 0 0.5rem; font-size: 0.875rem; line-height: 1.5; text-align: left; }
+        .actions { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; margin-top: 1.5rem; }
+        .btn { display: none; align-items: center; justify-content: center; min-width: 14rem; height: 2.75rem; padding: 0 1rem;
+               background: #4A9BE0; color: #fff; border: 0; border-radius: 1rem; font: 600 0.9375rem 'Poppins', sans-serif;
+               text-decoration: none; cursor: pointer; }
+        .btn.secondary { background: #fff; color: #4A9BE0; border: 1px solid #4A9BE0; }
+        .note { margin-top: 1rem; font-size: 0.75rem; color: #666; min-height: 1rem; }
+        .debug { display: none; margin-top: 2rem; padding: 0.75rem; background: #fff; border-radius: 0.5rem; text-align: left;
+                 font: 0.6875rem/1.5 ui-monospace, Menlo, monospace; word-break: break-all; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <p class="title">Your holiday points promo code:</p>
+            <div class="code" id="code">------</div>
+            <p class="text">• For new users, enter the promo code during signup.</p>
+            <p class="text">• For existing users, enter the promo code on the side menu.</p>
+            <div class="actions">
+                <button class="btn" id="getApp" type="button">Get the app</button>
+                <button class="btn secondary" id="openApp" type="button">I already have the app</button>
+                <button class="btn secondary" id="copyCode" type="button">Copy code</button>
+            </div>
+            <p class="note" id="note"></p>
+            <div class="debug" id="debug"></div>
+        </div>
+    </div>
+    <script>
+        (function () {
+            // Test page for CC-901 / CC-903 / CC-905 (Sprint 213). Production copy will live on app.carmd.com.
+            var PACKAGE = 'com.carmd.connect';
+            var APP_STORE_URL = 'https://apps.apple.com/us/app/carmd-connect/id6738333261';
+            // Prefix lets the app tell our clipboard text apart from anything else the user copied (iOS).
+            var CLIPBOARD_PREFIX = 'CARMD-PROMO:';
+
+            var params = new URLSearchParams(window.location.search);
+            // Same rule as the app's sanitizeReferralCode(): letters + digits, upper case, max 6.
+            var code = (params.get('code') || '').replace(/[^a-z0-9]/gi, '').toUpperCase().slice(0, 6);
+            var isDebug = params.get('debug') === '1';
+            var ua = navigator.userAgent;
+            var isAndroid = /Android/i.test(ua);
+            // iPadOS 13+ reports itself as a Mac; touch points tell them apart.
+            var isIOS = /iPhone|iPad|iPod/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+            // Set on the page Chrome falls back to when the automatic open fails, so it does not loop.
+            var isAutoOpenDone = params.get('app') === '0';
+
+            var $ = function (id) { return document.getElementById(id); };
+            $('code').textContent = code || '------';
+
+            // Android: Play Store keeps `referrer` for this install; the app reads it back with the Install Referrer API.
+            var playStoreUrl = 'https://play.google.com/store/apps/details?id=' + PACKAGE +
+                '&referrer=' + encodeURIComponent('promo_code=' + code + '&utm_source=promo_email');
+            // Custom scheme: opens the app when it is installed, without needing a verified domain.
+            var appSchemeUrl = 'carmd-connect://promo?code=' + encodeURIComponent(code);
+            var androidIntentUrl = 'intent://promo?code=' + encodeURIComponent(code) +
+                '#Intent;scheme=carmd-connect;package=' + PACKAGE + ';' +
+                'S.browser_fallback_url=' + encodeURIComponent(playStoreUrl) + ';end';
+
+            function note(text) { $('note').textContent = text; }
+            function show(id) { $(id).style.display = 'inline-flex'; }
+
+            function copyText(text) {
+                if (navigator.clipboard && window.isSecureContext) {
+                    return navigator.clipboard.writeText(text).catch(function () { legacyCopy(text); });
+                }
+                legacyCopy(text);
+                return Promise.resolve();
+            }
+            // Fallback for in-app browsers (Gmail, Outlook) that block navigator.clipboard.
+            function legacyCopy(text) {
+                var el = document.createElement('textarea');
+                el.value = text;
+                el.setAttribute('readonly', '');
+                el.style.position = 'fixed';
+                el.style.opacity = '0';
+                document.body.appendChild(el);
+                el.select();
+                el.setSelectionRange(0, text.length);
+                try { document.execCommand('copy'); } catch (e) { /* the code is still shown on the page */ }
+                el.remove();
+            }
+
+            $('copyCode').addEventListener('click', function () {
+                copyText(code).then(function () { note('Code copied.'); });
+            });
+
+            if (code) { show('copyCode'); }
+
+            if (isAndroid) {
+                show('getApp');
+                show('openApp');
+                $('getApp').addEventListener('click', function () { window.location.href = playStoreUrl; });
+                $('openApp').addEventListener('click', function () { window.location.href = androidIntentUrl; });
+                // App installed → opens it; not installed → Chrome follows browser_fallback_url (Play Store + referrer).
+                if (code && !isAutoOpenDone) {
+                    note('Opening CarMD Connect…');
+                    setTimeout(function () { window.location.href = androidIntentUrl; }, 1000);
+                }
+            } else if (isIOS) {
+                // Reaching this page on iOS means the Universal Link did not open the app (not installed,
+                // or opened from an in-app browser). Clipboard writes need a user tap, so this is a button.
+                $('getApp').textContent = 'Copy code & Get the app';
+                show('getApp');
+                show('openApp');
+                $('getApp').addEventListener('click', function () {
+                    copyText(CLIPBOARD_PREFIX + code).then(function () {
+                        note('Code copied. Opening the App Store…');
+                        window.location.href = APP_STORE_URL;
+                    });
+                });
+                // Never automatic: Safari shows an "address is invalid" error when the app is missing.
+                $('openApp').addEventListener('click', function () { window.location.href = appSchemeUrl; });
+            }
+            // Desktop (CC-903): the code and the two instructions above are the whole page.
+
+            if (isDebug) {
+                var debug = $('debug');
+                debug.style.display = 'block';
+                debug.textContent = [
+                    'code: ' + code,
+                    'platform: ' + (isAndroid ? 'android' : isIOS ? 'ios' : 'desktop'),
+                    'autoOpenDone: ' + isAutoOpenDone,
+                    'ua: ' + ua,
+                    'playStoreUrl: ' + playStoreUrl,
+                    'androidIntentUrl: ' + androidIntentUrl,
+                    'appSchemeUrl: ' + appSchemeUrl,
+                    'iosClipboard: ' + CLIPBOARD_PREFIX + code
+                ].join('\n');
+            }
+        })();
+    </script>
+</body>
+</html>

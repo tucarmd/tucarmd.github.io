@@ -1,0 +1,16 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.carmd.connect",
+      "sha256_cert_fingerprints": [
+        "B9:62:83:1E:AC:14:24:E1:3B:D3:31:A2:4D:FA:4B:38:7E:69:F4:26:31:9F:48:71:D4:EA:D8:EC:0D:36:B6:38",
+        "FE:7C:43:D2:00:F1:6A:CB:F4:9D:77:C2:97:92:ED:07:08:6B:41:76:8C:8E:13:38:AD:3F:AF:63:49:67:4B:97",
+        "B9:45:1D:59:10:0E:56:35:90:F9:6D:82:EC:9A:11:7B:50:13:21:BC:4B:15:5A:DD:06:FE:59:AF:52:71:B4:35"
+      ]
+    }
+  }
+]

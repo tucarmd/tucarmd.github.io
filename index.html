@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>CarMD Deep Link Test</title>
+    <style>
+        body { margin: 0; padding: 1.5rem 1rem; font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #EFF5FF; color: #333; }
+        main { max-width: 640px; margin: 0 auto; }
+        h1 { font-size: 1.25rem; margin: 0 0 0.25rem; }
+        h2 { font-size: 1rem; margin: 1.75rem 0 0.5rem; }
+        p { font-size: 0.875rem; line-height: 1.5; margin: 0 0 0.5rem; }
+        a.link { display: block; margin: 0 0 0.5rem; padding: 0.75rem 1rem; background: #fff; border-radius: 0.5rem;
+                 color: #1E5F99; text-decoration: none; font-size: 0.875rem; word-break: break-all; }
+        code { font-size: 0.8125rem; }
+    </style>
+</head>
+<body>
+<main>
+    <h1>CarMD Connect – deep link test site</h1>
+    <p>Test-only copy of the app.carmd.com deep link pages (Sprint 213, CC-901 / CC-903 / CC-905).</p>
+    <p>Tap these links from Notes, Messages or Mail. Typing them into the Safari address bar never opens the app.</p>
+
+    <h2>Promo code (CC-901 / CC-903 / CC-905)</h2>
+    <a class="link" href="/promo/?code=HOLI25">/promo/?code=HOLI25</a>
+    <a class="link" href="/promo/?code=HOLI25&amp;debug=1">/promo/?code=HOLI25&amp;debug=1 (shows the generated URLs)</a>
+
+    <h2>Group invite (copy)</h2>
+    <a class="link" href="/deeplink/group/index.html?qr=TEST123">/deeplink/group/index.html?qr=TEST123</a>
+
+    <h2>Verify email (copy)</h2>
+    <a class="link" href="/verify-email/?email=test%40example.com&amp;status=verified">/verify-email/?email=test@example.com&amp;status=verified</a>
+
+    <h2>Verification files</h2>
+    <a class="link" href="/.well-known/assetlinks.json">/.well-known/assetlinks.json</a>
+    <a class="link" href="/.well-known/apple-app-site-association">/.well-known/apple-app-site-association</a>
+</main>
+</body>
+</html>

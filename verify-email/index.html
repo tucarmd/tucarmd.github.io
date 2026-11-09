@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>CarMD Connect</title>
+    <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body { margin: 0; font-family: 'Poppins', sans-serif; background: #EFF5FF; color: #333; }
+        .wrapper { display: flex; min-height: 100vh; justify-content: center; align-items: center; }
+        .container { max-width: 420px; padding: 2rem 1.5rem; text-align: center; }
+        .icon { display: none; width: 3rem; height: 3rem; margin: 0 auto 1.5rem; }
+        .title { margin: 0 0 0.25rem; font-size: 0.9375rem; font-weight: 600; }
+        .text { margin: 0; font-size: 0.875rem; line-height: 1.5; }
+        .btn { display: none; align-items: center; justify-content: center; min-width: 8.75rem; height: 2.75rem; margin-top: 2rem; padding: 0 1rem;
+               background: #4A9BE0; color: #fff; border-radius: 1rem; font-weight: 600; text-decoration: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <svg class="icon" id="iconSuccess" viewBox="0 0 48 48" aria-hidden="true">
+                <circle cx="24" cy="24" r="24" fill="#4A9BE0"/>
+                <path d="M14.5 24.5l6.5 6.5 12.5-13" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <svg class="icon" id="iconAlert" viewBox="0 0 48 48" aria-hidden="true">
+                <circle cx="24" cy="24" r="24" fill="#4A9BE0"/>
+                <rect x="22" y="11" width="4" height="18" rx="2" fill="#fff"/>
+                <circle cx="24" cy="35.5" r="2.5" fill="#fff"/>
+            </svg>
+            <p class="title" id="title"></p>
+            <p class="text" id="text"></p>
+            <a class="btn" id="openApp">Get the app</a>
+        </div>
+    </div>
+    <script>
+        (function () {
+            var playStoreUrl = 'https://play.google.com/store/apps/details?id=com.carmd.connect&pli=1';
+            var appStoreUrl = 'https://apps.apple.com/us/app/carmd-connect/id6738333261';
+            var params = new URLSearchParams(window.location.search);
+            var email = params.get('email') || '';
+            // The backend sends `success` for a verified link.
+            var status = params.get('status') || '';
+            if (status === 'success') { status = 'verified'; }
+            // Set by the backend: `verify-email` (sign-up / existing user verify) or `change_email`.
+            var flow = params.get('flow') || '';
+            var results = {
+                verified: { icon: 'iconSuccess', title: 'You’ve successfully verified your email.',
+                    text: 'You can now close this page and return to the app to complete signup.' },
+                already_verified: { icon: 'iconSuccess', title: 'Your email is already verified.',
+                    text: 'You can now close this page and return to the app.' },
+                expired: { icon: 'iconAlert', title: 'The verification link has expired.',
+                    text: 'Please return to the app and send a new verification link.' },
+                invalid: { icon: 'iconAlert', title: 'The verification link is not valid.',
+                    text: 'Please return to the app and send a new verification link.' }
+            };
+            if (flow === 'change_email') {
+                var changeVerified = { icon: 'iconSuccess', title: 'Email updated!',
+                    text: 'You can now earn and redeem reward points.' };
+                var changeAgain = 'Please return to the app and request the email change again.';
+                results = {
+                    verified: changeVerified,
+                    already_verified: changeVerified,
+                    expired: { icon: 'iconAlert', title: results.expired.title, text: changeAgain },
+                    invalid: { icon: 'iconAlert', title: results.invalid.title, text: changeAgain }
+                };
+            }
+            // Unknown status values are treated as invalid, same as the app.
+            var result = results[status] || results.invalid;
+            document.getElementById(result.icon).style.display = 'block';
+            document.getElementById('title').textContent = result.title;
+            document.getElementById('text').textContent = result.text;
+
+            var isAndroid = /Android/i.test(navigator.userAgent);
+            var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+            // Desktop: result only.
+            if (!isAndroid && !isIOS) {
+                return;
+            }
+
+            var openApp = document.getElementById('openApp');
+            var query = '?email=' + encodeURIComponent(email) + '&status=' + encodeURIComponent(status) +
+                (flow ? '&flow=' + encodeURIComponent(flow) : '');
+            // Set on the page Android falls back to when the automatic open fails, so it does not try again.
+            var isAutoOpenDone = params.get('app') === '0';
+
+            // Leaving replaces this page in the history, so Back never returns to it.
+            var appTriedAt = 0;
+            var promptClosedAt = 0;
+            var appTookOver = false;
+            function leaveTo(url, isApp) {
+                appTriedAt = isApp ? Date.now() : 0;
+                window.location.replace(url);
+            }
+            // iOS: Safari's "Open in app?" prompt blurs the page; tapping a choice focuses it again.
+            window.addEventListener('focus', function () {
+                if (isIOS && appTriedAt) { promptClosedAt = Date.now(); }
+            });
+            // The app took over when the page goes to the background right after the attempt:
+            // Android within 60s of it, iOS within 3s of the prompt closing ("Cancel" or Safari's
+            // "address is invalid" error never hide the page). Safari does not always report this; the
+            // page then simply stays. A store or fallback page unloads this page, so it never comes back.
+            document.addEventListener('visibilitychange', function () {
+                var now = Date.now();
+                if (document.visibilityState === 'hidden') {
+                    if ((isAndroid && appTriedAt && now - appTriedAt < 60000) ||
+                        (isIOS && promptClosedAt && now - promptClosedAt < 3000)) {
+                        appTookOver = true;
+                    }
+                    return;
+                }
+                if (appTookOver) { closePage(); }
+            });
+            window.addEventListener('pageshow', function (e) {
+                if (e.persisted && appTookOver) { closePage(); }
+            });
+            // Back in the browser after the app opened: close the tab, or blank it when closing is not allowed.
+            var isClosed = false;
+            function closePage() {
+                if (isClosed) { return; }
+                isClosed = true;
+                document.body.innerHTML = '';
+                window.close();
+                window.location.replace('about:blank');
+            }
+
+            var appUrl;
+            if (isAndroid) {
+                // Blocked or app missing: Chrome reloads this page with `app=0` instead of opening a store.
+                var stayUrl = new URL(window.location.href);
+                stayUrl.searchParams.set('app', '0');
+                // Custom scheme, same as iOS: an `https` intent only reaches the app for a verified App Link host,
+                // so it never opens from a test host and Chrome takes the fallback instead.
+                appUrl = 'intent://verify-email' + query +
+                    '#Intent;scheme=carmd-connect;package=com.carmd.connect;' +
+                    'S.browser_fallback_url=' + encodeURIComponent(stayUrl.href) + ';end';
+            } else {
+                appUrl = 'carmd-connect://verify-email' + query;
+            }
+            // Still here after the automatic open means the app is not installed: the button goes to the store.
+            var storeUrl = isAndroid ? playStoreUrl : appStoreUrl;
+            openApp.href = storeUrl;
+            openApp.style.display = 'inline-flex';
+            openApp.addEventListener('click', function (e) {
+                e.preventDefault();
+                leaveTo(storeUrl, false);
+            });
+            if (!isAutoOpenDone) {
+                setTimeout(function () { leaveTo(appUrl, true); }, 1000);
+            }
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appID": "D258PF2KBU.com.carmd.connect",
+        "components": [
+          { "/": "/promo", "comment": "CC-901/CC-905 promo code link" },
+          { "/": "/promo/*", "comment": "CC-901/CC-905 promo code link" },
+          { "/": "/deeplink/group/*", "comment": "Group invite (copy of app.carmd.com)" },
+          { "/": "/verify-email", "comment": "Verify email (copy of app.carmd.com)" },
+          { "/": "/verify-email/*", "comment": "Verify email (copy of app.carmd.com)" }
+        ]
+      }
+    ]
+  }
+}
