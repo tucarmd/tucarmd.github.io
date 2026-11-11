@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>CarMD Connect</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+    <link rel="icon" href="assets/logo.png" type="image/png">
+    <link rel="shortcut icon" href="assets/favicon.ico" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,500;&display=swap" rel="stylesheet">
+</head>
+<body>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.js"></script>
+    <script type="text/javascript">
+        var mobileDetector = {
+            isAndroid: function () {
+                return /Android/i.test(navigator.userAgent);
+            },
+            isIOS: function () {
+                return /iPhone|iPad|iPod/i.test(navigator.userAgent);
+            },
+            isMobile: function () {
+                return (mobileDetector.isAndroid() || mobileDetector.isIOS());
+            }
+        };
+
+        $(document).ready(function () {
+            var iosAppStoreUrl = "https://apps.apple.com/us/app/carmd-connect/id6738333261";
+            var androidPlayStoreUrl = "https://play.google.com/store/apps/details?id=com.carmd.connect&pli=1";
+            
+            // Detect platform and redirect immediately to store
+            if (mobileDetector.isIOS()) {
+                // iOS: If we're here, Universal Link failed = app not installed
+                console.log('iOS detected - Universal Link failed, redirecting to App Store');
+                $('.last-info').html('CarMD Connect app not found.<br>Redirecting to App Store...');
+                $('#appLink').text('Opening').addClass('loading');
+                
+                // Auto redirect to App Store after 1 seconds
+                setTimeout(function() {
+                    window.location.href = iosAppStoreUrl;
+                }, 1_000);
+                
+                // Manual click handler
+                $('#appLink').on('click', function() {
+                    window.location.href = iosAppStoreUrl;
+                });
+                
+            } else if (mobileDetector.isAndroid()) {
+                // Android: Try intent first, then Play Store
+                console.log('Android detected - trying intent');
+                $('.last-info').html('Opening CarMD Connect app...');
+                $('#appLink').text('Continue').addClass('loading');
+                
+                // Promo link (WDD-4178 / WDD-4179): the app reads `https://{host}/deeplink/promo/?code=XXXX`.
+                // This test copy is hosted on tucarmd.github.io, which is not in the app's intent filter,
+                // so the intent targets an app host instead (?host= to pick dev/staging).
+                var params = new URLSearchParams(window.location.search);
+                var appHost = params.get('host') || 'app.carmd.com';
+                var intentUrl = 'intent://' + appHost + '/deeplink/promo/?code=' + encodeURIComponent(params.get('code') || '') + 
+                               "#Intent;" +
+                               "scheme=https;" +
+                               "package=com.carmd.connect;" +
+                               "S.browser_fallback_url=" + encodeURIComponent(androidPlayStoreUrl) + ";" +
+                               "end";
+                
+                // Try intent immediately
+                setTimeout(function() {
+                    try {
+                        window.location.href = intentUrl;
+                    } catch (e) {
+                        // Fallback to Play Store
+                        $('.last-info').html('App not found. Redirecting to Play Store...');
+                        setTimeout(function() {
+                            window.location.href = androidPlayStoreUrl;
+                        }, 1000);
+                    }
+                }, 1000);
+                
+                // Manual click handler
+                $('#appLink').on('click', function() {
+                    try {
+                        window.location.href = intentUrl;
+                    } catch (e) {
+                        window.location.href = androidPlayStoreUrl;
+                    }
+                });
+                
+            } else {
+                console.log('Desktop detected');
+                $('.last-info').html('CarMD Connect is available on mobile devices.<br>Download for your phone:');
+                $('#appLink').text('View Download Options');
+                $('.app-store-links').show();
+                
+                $('#appLink').on('click', function() {
+                    $('.app-store-links').slideToggle();
+                });
+                
+                $('#iosStore').on('click', function() {
+                    window.open(iosAppStoreUrl, '_blank');
+                });
+                
+                $('#androidStore').on('click', function() {
+                    window.open(androidPlayStoreUrl, '_blank');
+                });
+            }
+        });
+    </script>
+
+    <div class="website-wrapper">
+        <div class="container">
+            <h2>CarMD Connect</h2>
+            <p class="last-info">If you are not automatically redirected,<br>select Continue.</p>
+            <p class="link">
+                <a id="appLink" href="javascript:void(0)" class="btn">Continue</a>
+            </p>
+            
+            <div class="app-store-links" style="display: none;">
+                <div class="store-buttons">
+                    <a id="iosStore" href="javascript:void(0)" class="store-btn">
+                        App Store
+                    </a>
+                    <a id="androidStore" href="javascript:void(0)" class="store-btn">
+                        Play Store
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style type="text/css">
+        body, p, h2 {
+            font-family: "Poppins", sans-serif;
+            font-size: 1.125rem;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .container {
+            text-align: center;
+            margin: 1rem 0 5rem;
+            padding: 4rem 0;
+        }
+
+        .container h2 {
+            margin-bottom: 1rem;
+            font-weight: 500;
+            margin-bottom: 0.4rem;
+            padding: 0;
+            font-size: 1.125rem;
+        }
+
+        .app-icon {
+            margin-bottom: 1.5rem;
+        }
+
+        .icon-circle {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #89C0ED, #7AB1E8);
+            border-radius: 20px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            color: white;
+            box-shadow: 0 8px 25px rgba(118, 165, 203, 0.3);
+        }
+
+        .last-info {
+            margin: 0;
+            padding: 0;
+            line-height: 1.5;
+            color: #666;
+        }
+
+        .container .link {
+            margin: 4rem 0 0;
+        }
+
+        .btn {
+            background-color: #89C0ED;
+            color: #fff;
+            border-radius: 1rem;
+            font-weight: 500;
+            font-size: 1.063rem;
+            text-decoration: none;
+            width: 8.75rem;
+            height: 2.75rem;
+            box-shadow: 0px 4px 8px rgba(118, 165, 203, 0.4);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .btn:hover {
+            background-color: #7AB1E8;
+            transform: translateY(-1px);
+        }
+
+        .btn.loading {
+            background-color: #6B9BD1;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn.loading::after {
+            content: '';
+            width: 16px;
+            height: 16px;
+            margin-left: 8px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .store-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin: 2rem 0;
+        }
+
+        .store-btn {
+            background-color: #333;
+            color: #fff;
+            border-radius: 0.5rem;
+            font-weight: 400;
+            font-size: 0.875rem;
+            text-decoration: none;
+            padding: 0.75rem 1.25rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .store-btn:hover {
+            background-color: #555;
+        }
+
+        .website-wrapper {
+            display: flex;
+            height: 100vh;
+            justify-content: center;
+            align-items: center;
+            background: #EFF5FF;
+        }
+
+        .app-store-links {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 2rem 1rem;
+            }
+            
+            .store-btn {
+                padding: 0.6rem 1rem;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</body>
+</html>
