@@ -65,10 +65,13 @@
             // Android: Play Store keeps `referrer` for this install; the app reads it back with the Install Referrer API.
             var playStoreUrl = 'https://play.google.com/store/apps/details?id=' + PACKAGE +
                 '&referrer=' + encodeURIComponent('promo_code=' + code + '&utm_source=promo_email');
-            // Custom scheme: opens the app when it is installed, without needing a verified domain.
-            var appSchemeUrl = 'carmd-connect://promo?code=' + encodeURIComponent(code);
-            var androidIntentUrl = 'intent://promo?code=' + encodeURIComponent(code) +
-                '#Intent;scheme=carmd-connect;package=' + PACKAGE + ';' +
+            // App link the app parses (WDD-4178 PromoCodeService.parsePromoLink): https, path /deeplink/promo/, any host.
+            // Host must be in the app's https intent filter / associated domains: app.carmd.com, dev.carmdconnect.com, staging.carmdconnect.com.
+            var APP_LINK_HOST = params.get('host') || 'app.carmd.com';
+            var appLinkUrl = 'https://' + APP_LINK_HOST + '/deeplink/promo/?code=' + encodeURIComponent(code);
+            // Android: explicit-package intent for the https link → opens the app even before the App Link is verified for this path.
+            var androidIntentUrl = 'intent://' + APP_LINK_HOST + '/deeplink/promo/?code=' + encodeURIComponent(code) +
+                '#Intent;scheme=https;package=' + PACKAGE + ';' +
                 'S.browser_fallback_url=' + encodeURIComponent(playStoreUrl) + ';end';
 
             function note(text) { $('note').textContent = text; }
@@ -123,8 +126,8 @@
                         window.location.href = APP_STORE_URL;
                     });
                 });
-                // Never automatic: Safari shows an "address is invalid" error when the app is missing.
-                $('openApp').addEventListener('click', function () { window.location.href = appSchemeUrl; });
+                // Universal Link: opens the app only once the host's apple-app-site-association lists /deeplink/promo/*.
+                $('openApp').addEventListener('click', function () { window.location.href = appLinkUrl; });
             }
             // Desktop (CC-903): the code and the two instructions above are the whole page.
 
@@ -138,7 +141,7 @@
                     'ua: ' + ua,
                     'playStoreUrl: ' + playStoreUrl,
                     'androidIntentUrl: ' + androidIntentUrl,
-                    'appSchemeUrl: ' + appSchemeUrl,
+                    'appLinkUrl: ' + appLinkUrl,
                     'iosClipboard: ' + CLIPBOARD_PREFIX + code
                 ].join('\n');
             }
